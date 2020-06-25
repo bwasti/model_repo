@@ -14,8 +14,11 @@ from detectron2.checkpoint import DetectionCheckpointer
 from detectron2.config import get_cfg
 from detectron2.engine import DefaultTrainer, default_argument_parser, default_setup, launch
 from detectron2.evaluation import COCOEvaluator, verify_results
+from PIL import Image
+import numpy as np
 
 from tensormask import add_tensormask_config
+import torch
 
 
 class Trainer(DefaultTrainer):
@@ -44,6 +47,10 @@ def main(args):
 
     if args.eval_only:
         model = Trainer.build_model(cfg)
+        img = Image.open("datasets/coco/train2017/000000001146.jpg")
+        img.load()
+        d = np.asarray(img, dtype="float32")
+        model = torch.jit.trace(model, d)
         DetectionCheckpointer(model, save_dir=cfg.OUTPUT_DIR).resume_or_load(
             cfg.MODEL.WEIGHTS, resume=args.resume
         )
